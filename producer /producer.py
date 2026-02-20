@@ -3,13 +3,16 @@ import json
 import time
 import uuid
 import random
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 producer = KafkaProducer(
-    bootstrap_servers='localhost:9092',
-    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+    bootstrap_servers='kafka:9092',
+    value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+    retries=5,
+    acks='all'
 )
-
-topic = "orders"
 
 while True:
     order = {
@@ -18,7 +21,7 @@ while True:
         "amount": round(random.uniform(100, 5000), 2),
         "status": "CREATED"
     }
-    producer.send(topic, order)
-    producer.flush()
-    print("Produced:", order)
-    time.sleep(3)
+
+    producer.send("orders", order)
+    logging.info(f"Produced: {order}")
+    time.sleep(2)
